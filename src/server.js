@@ -7,11 +7,9 @@ const express = require("express");
 const crypto = require("crypto");
 const NonceCache = require("./security/nonce-cache");
 const { verifyRequest, computeSignature } = require("./security/hmac");
-const { updateOrderComment, readCustomerOrders } = require("./db/access_jpa");
-//const { updateOrderComment, readCustomerOrders } = require("./db/access_fsp");
+const { updateOrderComment, readCustomerOrders } = require("./db/access");
 const logger = require("./logger");
 const { error } = require("console");
-//const logger = require("./logger_fsp");
 
 const app = express();
 
