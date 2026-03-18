@@ -3,17 +3,17 @@
   "nodes": [
     {
       "parameters": {
-        "jsCode": "const data = $json.body ?? $json;\n\nconst kdNr = String(data.kdNr ?? '').trim();\nconst auftragsIdRaw = data.auftragsId;\nconst comment = String(data.comment ?? '').trim();\n\nconst auftragsId = Number(auftragsIdRaw);\n\nconst patchBodyObject = {\n  comment\n};\n\nconst patchBodyString = JSON.stringify(patchBodyObject);\nconst signPath = `/customers/${kdNr}/${auftragsId}/comment`;\n\nconst inputValid =\n  kdNr.length > 0 &&\n  Number.isInteger(auftragsId) &&\n  auftragsId > 0 &&\n  comment.length > 0;\n\nlet validationError = null;\nlet speechText = null;\n\nif (!kdNr) {\n  validationError = 'KDNR_MISSING';\n  speechText = 'Die Kundennummer fehlt.';\n} else if (!Number.isInteger(auftragsId) || auftragsId <= 0) {\n  validationError = 'AUFTRAGSID_INVALID';\n  speechText = 'Die Auftrags-ID ist ungültig.';\n} else if (!comment) {\n  validationError = 'COMMENT_MISSING';\n  speechText = 'Der Kommentartext fehlt.';\n}\n\nreturn [\n  {\n    json: {\n      kdNr,\n      auftragsId,\n      comment,\n      signPath,\n      patchBodyObject,\n      patchBodyString,\n      inputValid,\n      validationError,\n      speechText\n    }\n  }\n];"
+        "jsCode": "const data = $json.body ?? $json;\n\nconst kdNr = String(data.kdNr ?? '').trim();\nconst auftragsIdRaw = data.auftragsId;\nconst comment = String(data.comment ?? '').trim();\n\nconst auftragsId = Number(auftragsIdRaw);\nconst patchBodyString = JSON.stringify({ comment });\nconst signPath = `/customers/${kdNr}/${auftragsId}/comment`;\n\nconst inputValid =\n  kdNr.length > 0 &&\n  Number.isInteger(auftragsId) &&\n  auftragsId > 0 &&\n  comment.length > 0;\n\nlet validationError = null;\nlet speechText = null;\n\nif (!kdNr) {\n  validationError = 'KDNR_MISSING';\n  speechText = 'Die Kundennummer fehlt.';\n} else if (!Number.isInteger(auftragsId) || auftragsId <= 0) {\n  validationError = 'AUFTRAGSID_INVALID';\n  speechText = 'Die Auftrags-ID ist ungültig.';\n} else if (!comment) {\n  validationError = 'COMMENT_MISSING';\n  speechText = 'Der Kommentartext fehlt.';\n}\n\nreturn [\n  {\n    json: {\n      kdNr,\n      auftragsId,\n      comment,\n      signPath,\n      patchBodyString,\n      inputValid,\n      validationError,\n      speechText,\n    },\n  },\n];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -688,
-        -384
+        -672,
+        -416
       ],
       "id": "c83c0460-5486-4887-8b90-4f3932c29fe2",
       "name": "Prepare Input",
-      "notes": "Node normalisiert die Eingaben und erzeugt alle technischen Felder, die später gebraucht werden:\n- kdNr\n- auftragsId\n- comment\n- signPath\n- patchBodyObject\n- patchBodyString\n- inputValid\n- validationError\nDer PATCH-Body wird genau einmal serialisiert und geht später an /sign in den PATCH-Request."
+      "notes": "Node normalisiert die Eingaben und erzeugt alle technischen Felder, die später gebraucht werden:\n- kdNr\n- auftragsId\n- comment\n- signPath\n- patchBodyString\n- inputValid\n- validationError\nDer PATCH-Body wird genau einmal serialisiert und geht später an /sign in den PATCH-Request."
     },
     {
       "parameters": {
@@ -44,7 +44,7 @@
       "typeVersion": 2.3,
       "position": [
         -496,
-        -192
+        64
       ],
       "id": "30c77303-76cf-4a12-a678-b1087a571b9e",
       "name": "Input valid?",
@@ -57,8 +57,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -272,
-        32
+        528,
+        80
       ],
       "id": "89fe7db1-9298-43df-8bb3-b28acd1b6f66",
       "name": "Build Validation Error Response",
@@ -98,7 +98,14 @@
             }
           ]
         },
-        "options": {}
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
@@ -109,7 +116,7 @@
       "id": "e9d2daab-c7ef-42b7-9793-c9940057610c",
       "name": "Sign Request",
       "alwaysOutputData": true,
-      "retryOnFail": true,
+      "retryOnFail": false,
       "maxTries": 2,
       "notes": "Node ruft den Sign-Service auf. \n\nDa Fehler nicht global über n8n Error Handling gelöst werden sollen: Continue On Fail = true.\nSomit läuft der Workflow auch bei Sign-Fehlern noch in eine saubere Agent-Antwort.\n\nErwartete Antwort:\n{\n  \"ok\": true,\n  \"headers\": {\n    \"X-API-Key\": \"...\",\n    \"X-Timestamp\": \"...\",\n    \"X-Nonce\": \"...\",\n    \"X-Signature\": \"...\",\n    \"Content-Type\": \"application/json\"\n  }\n}"
     },
@@ -123,7 +130,7 @@
       "typeVersion": 3.2,
       "position": [
         -64,
-        -368
+        -400
       ],
       "id": "a9e10599-f082-4ab2-8cf0-dfacc8aeddd5",
       "name": "Merge Input + Sign",
@@ -141,7 +148,7 @@
           "conditions": [
             {
               "id": "490c7023-5fbe-4f39-b4eb-d085ceb196f2",
-              "leftValue": "={{ $json.ok }}",
+              "leftValue": "={{ $json.ok === true || $json.body?.ok === true }}",
               "rightValue": "",
               "operator": {
                 "type": "boolean",
@@ -150,7 +157,7 @@
               }
             }
           ],
-          "combinator": "and"
+          "combinator": "or"
         },
         "options": {}
       },
@@ -171,8 +178,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        336,
-        -96
+        528,
+        -112
       ],
       "id": "f61cde07-446e-4011-8bdf-daa1e553d311",
       "name": "Build Sign Error Response",
@@ -187,19 +194,19 @@
           "parameters": [
             {
               "name": "X-API-Key",
-              "value": "={{ $json.headers['X-API-Key'] }}"
+              "value": "N8N_LINA_API_KEY"
             },
             {
               "name": "X-Timestamp",
-              "value": "={{ $json.headers['X-Timestamp'] }}"
+              "value": "={{ String($json.body.headers[\"X-Timestamp\"] ?? \"\").trim() }}"
             },
             {
               "name": "X-Nonce",
-              "value": "={{ $json.headers['X-Nonce'] }}"
+              "value": "={{ String($json.body.headers[\"X-Nonce\"] ?? \"\").trim() }}"
             },
             {
               "name": "X-Signature",
-              "value": "={{ $json.headers['X-Signature'] }}"
+              "value": "={{ String($json.body.headers[\"X-Signature\"] ?? \"\").trim() }}"
             },
             {
               "name": "Content-Type",
@@ -211,7 +218,14 @@
         "contentType": "raw",
         "rawContentType": "application/json",
         "body": "={{ $json.patchBodyString }}",
-        "options": {}
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
@@ -222,19 +236,19 @@
       "id": "3721fed0-1ed1-4851-93ec-278b7fd56f04",
       "name": "PATCH Request (Add Comment)",
       "alwaysOutputData": true,
-      "retryOnFail": true,
+      "retryOnFail": false,
       "maxTries": 2,
       "notes": "Der Node sendet den exakt signierten Body an die Access-API.\nTechnisch kritischer Teil, weil der PATCH-Body exakt dem signierten bodyString entsprechen muss."
     },
     {
       "parameters": {
-        "jsCode": "//const found = $json.found === true;\nconst updated = $json.updated === true;\n\nconst kdNr = $json.kdNr;\nconst auftragsId = $json.auftragsId;\n\nif (updated) {\n//if (found && updated) {\n  return [\n    {\n      json: {\n        success: true,\n        request: {\n          kdNr,\n          auftragsId\n        },\n        result: {\n          updated: true\n        },\n        speech: {\n          summaryText: 'Die Auftragsnotiz wurde erfolgreich gespeichert.'\n        },\n        error: null\n      }\n    }\n  ];\n}\n/*\nif (!found) {\n  return [\n    {\n      json: {\n        success: false,\n        request: {\n          kdNr,\n          auftragsId\n        },\n        result: null,\n        speech: {\n          summaryText: 'Der Auftrag konnte nicht gefunden werden.'\n        },\n        error: {\n          code: 'ORDER_NOT_FOUND'\n        }\n      }\n    }\n  ];\n}\n*/\nreturn [\n  {\n    json: {\n      success: false,\n      request: {\n        kdNr,\n        auftragsId\n      },\n      result: {\n        updated: false\n      },\n      speech: {\n        summaryText: 'Die Auftragsnotiz konnte nicht gespeichert werden.'\n      },\n      error: {\n        code: 'ORDER_NOTE_UPDATE_FAILED'\n      }\n    }\n  }\n];"
+        "jsCode": "const updated = $json.updated === true;\nconst errorCode = String($json.errorCode ?? '').trim();\n\nconst kdNr = $json.kdNr;\nconst auftragsId = $json.auftragsId;\n\nif (updated) {\n  return [\n    {\n      json: {\n        success: true,\n        request: {\n          kdNr,\n          auftragsId,\n        },\n        result: {\n          updated: true,\n        },\n        speech: {\n          summaryText: 'Die Auftragsnotiz wurde erfolgreich gespeichert.',\n        },\n        error: null,\n      },\n    },\n  ];\n}\n\nif (errorCode === 'ORDER_NOT_FOUND') {\n  return [\n    {\n      json: {\n        success: false,\n        request: {\n          kdNr,\n          auftragsId,\n        },\n        result: null,\n        speech: {\n          summaryText: 'Der Auftrag konnte nicht gefunden werden.',\n        },\n        error: {\n          code: 'ORDER_NOT_FOUND',\n        },\n      },\n    },\n  ];\n}\n\nif (errorCode === 'ORDER_NOTE_UPDATE_FAILED') {\n  return [\n    {\n      json: {\n        success: false,\n        request: {\n          kdNr,\n          auftragsId,\n        },\n        result: {\n          updated: false,\n        },\n        speech: {\n          summaryText: 'Die Auftragsnotiz konnte nicht gespeichert werden.',\n        },\n        error: {\n          code: 'ORDER_NOTE_UPDATE_FAILED',\n        },\n      },\n    },\n  ];\n}\n\nreturn [\n  {\n    json: {\n      success: false,\n      request: {\n        kdNr,\n        auftragsId,\n      },\n      result: null,\n      speech: {\n        summaryText: 'Die Anfrage konnte nicht verarbeitet werden.',\n      },\n      error: {\n        code: 'UNKNOWN_WORKFLOW_ERROR',\n      },\n    },\n  },\n];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        784,
-        -352
+        928,
+        -384
       ],
       "id": "f7f7ddb9-1d65-4b72-adf8-28dbd3058d6f",
       "name": "Build Agent Response",
@@ -251,8 +265,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        1056,
-        32
+        1104,
+        -16
       ],
       "id": "473b5001-23df-4e61-8e37-f8c3db42230b",
       "name": "Respond to Webhook",
@@ -267,8 +281,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        576,
-        -352
+        736,
+        -384
       ],
       "id": "eb0b3815-df7d-4e75-a0f4-2640c271abb8",
       "name": "Merge Input + PATCH Result",
@@ -284,13 +298,26 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -928,
-        -384
+        -880,
+        -416
       ],
       "id": "ef229ef5-8047-4e3d-a2c6-4ebf4e278d14",
       "name": "Webhook – Add Order Node",
       "webhookId": "25f2ce9d-897f-473d-aa79-585628209898",
       "notes": "Einstiegspunkt für den Voice-Agent"
+    },
+    {
+      "parameters": {
+        "jsCode": "const source =\n  $json.body && typeof $json.body === 'object'\n    ? $json.body\n    : $json;\n\nconst updated = source.updated === true;\nconst statusCode = Number($json.statusCode ?? source.statusCode ?? 0);\n\nconst errorText = String(\n  source.error ??\n  $json.error ??\n  $json.errorDescription ??\n  source.message ??\n  $json.message ??\n  ''\n).trim();\n\nconst detailsText = String(\n  source.details ??\n  $json.details ??\n  ''\n).trim();\n\nif (updated) {\n  return [\n    {\n      json: {\n        updated: true,\n        errorCode: null,\n        errorMessage: null,\n      },\n    },\n  ];\n}\n\nif (\n  statusCode === 404 ||\n  errorText.includes('Order not found') ||\n  detailsText.includes('Order not found')\n) {\n  return [\n    {\n      json: {\n        updated: false,\n        errorCode: 'ORDER_NOT_FOUND',\n        errorMessage: 'Der Auftrag konnte nicht gefunden werden.',\n      },\n    },\n  ];\n}\n\nreturn [\n  {\n    json: {\n      updated: false,\n      errorCode: 'ORDER_NOTE_UPDATE_FAILED',\n      errorMessage: 'Die Auftragsnotiz konnte nicht gespeichert werden.',\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        -288
+      ],
+      "id": "593d6323-c030-482f-8d44-db5f3afb29b0",
+      "name": "Normalize PATCH Result"
     }
   ],
   "pinData": {},
@@ -389,9 +416,9 @@
       "main": [
         [
           {
-            "node": "Merge Input + PATCH Result",
+            "node": "Normalize PATCH Result",
             "type": "main",
-            "index": 1
+            "index": 0
           }
         ]
       ]
@@ -439,6 +466,17 @@
           }
         ]
       ]
+    },
+    "Normalize PATCH Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Input + PATCH Result",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -447,7 +485,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "2c24c697-5256-47e9-bfaa-8a2739ff4e75",
+  "versionId": "89a7cff9-ba0f-422a-aa46-9f70100b1e64",
   "meta": {
     "instanceId": "0ec6dfdcab7eb78bd76c6abaa334f7b038d8c288297aa2bbcf7e11dc5886933c"
   },

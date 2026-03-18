@@ -11,7 +11,7 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -720,
+        -752,
         -160
       ],
       "id": "6ba9f76c-8adf-4be5-8d48-7c8794b7c390",
@@ -22,12 +22,12 @@
     },
     {
       "parameters": {
-        "jsCode": "const kdNr = $json.body?.kdNr ?? $json.kdNr ?? $json.query?.kdNr;\n\nif (!kdNr || String(kdNr).trim() === \"\") {\n  return [\n    {\n      json: {\n        inputValid: false,\n        success: false,\n        request: {\n          kdNr: null\n        },\n        customer: {\n          kdNr: null,\n          displayName: null,\n          company: null\n        },\n        summary: {\n          orderCount: 0,\n          positionCount: 0\n        },\n        orders: [],\n        speech: {\n          summaryText: \"Es wurde keine Kundennummer übergeben.\"\n        },\n        error: {\n          code: \"MISSING_KDNR\",\n          message: \"kdNr fehlt im Request.\"\n        }\n      }\n    }\n  ];\n}\n\nconst kdNrClean = String(kdNr).trim();\n\nreturn [\n  {\n    json: {\n      inputValid: true,\n      kdNr: kdNrClean,\n      method: \"GET\",\n      path: `/customers/${kdNrClean}/orders`,\n      bodyString: \"\"\n    }\n  }\n];"
+        "jsCode": "const kdNr = $json.body?.kdNr ?? $json.kdNr ?? $json.query?.kdNr;\n\nif (!kdNr || String(kdNr).trim() === '') {\n  return [\n    {\n      json: {\n        success: false,\n        request: {\n          kdNr: null,\n        },\n        customer: {\n          kdNr: null,\n          displayName: null,\n          company: null,\n        },\n        summary: {\n          orderCount: 0,\n          positionCount: 0,\n        },\n        orders: [],\n        speech: {\n          summaryText: 'Es wurde keine Kundennummer übergeben.',\n        },\n        error: {\n          code: 'MISSING_KDNR',\n          message: 'kdNr fehlt im Request.',\n        },\n      },\n    },\n  ];\n}\n\nconst kdNrClean = String(kdNr).trim();\n\nreturn [\n  {\n    json: {\n      inputValid: true,\n      kdNr: kdNrClean,\n      method: 'GET',\n      path: `/customers/${kdNrClean}/orders`,\n      bodyString: '',\n    },\n  },\n];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -512,
+        -544,
         -160
       ],
       "id": "1065ab9e-724a-436e-aba2-d0e91731c083",
@@ -149,7 +149,7 @@
       "typeVersion": 1.5,
       "position": [
         560,
-        208
+        112
       ],
       "id": "21d15bb8-a772-478a-96b5-c6047c00f018",
       "name": "Respond to Webhook"
@@ -200,20 +200,6 @@
       ],
       "id": "f67696aa-dcc1-412f-bf0e-6b82b2542256",
       "name": "Input valid?"
-    },
-    {
-      "parameters": {
-        "jsCode": "const data = { ...$json };\ndelete data.inputValid;\n\nreturn [{ json: data }];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -176,
-        208
-      ],
-      "id": "0df2d4d8-5d7d-4f2c-93d3-817740475002",
-      "name": "remove input valid",
-      "notes": "Entfernt inputValid aus der finalen Antwort."
     }
   ],
   "pinData": {},
@@ -300,17 +286,6 @@
         ],
         [
           {
-            "node": "remove input valid",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "remove input valid": {
-      "main": [
-        [
-          {
             "node": "Respond to Webhook",
             "type": "main",
             "index": 0
@@ -319,13 +294,13 @@
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "3b7af3b7-5f66-48f9-a773-97a2a16e12c7",
+  "versionId": "19af1c60-2292-40e1-becd-2dcc871a0311",
   "meta": {
     "instanceId": "0ec6dfdcab7eb78bd76c6abaa334f7b038d8c288297aa2bbcf7e11dc5886933c"
   },
