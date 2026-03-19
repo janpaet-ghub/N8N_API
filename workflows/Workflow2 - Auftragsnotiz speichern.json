@@ -13,7 +13,7 @@
       ],
       "id": "c83c0460-5486-4887-8b90-4f3932c29fe2",
       "name": "Prepare Input",
-      "notes": "Node normalisiert die Eingaben und erzeugt alle technischen Felder, die später gebraucht werden:\n- kdNr\n- auftragsId\n- comment\n- signPath\n- patchBodyString\n- inputValid\n- validationError\nDer PATCH-Body wird genau einmal serialisiert und geht später an /sign in den PATCH-Request."
+      "notes": "Liest kdNr, auftragsId und comment, validiert die Eingabe und erzeugt Pfad und PATCH-Body."
     },
     {
       "parameters": {
@@ -48,7 +48,7 @@
       ],
       "id": "30c77303-76cf-4a12-a678-b1087a571b9e",
       "name": "Input valid?",
-      "notes": "Verzweigung zwischen gültigen und ungültigen Eingaben"
+      "notes": "Trennt zwischen gültiger Anfrage und direkter Validierungsfehler-Antwort."
     },
     {
       "parameters": {
@@ -62,7 +62,7 @@
       ],
       "id": "89fe7db1-9298-43df-8bb3-b28acd1b6f66",
       "name": "Build Validation Error Response",
-      "notes": "Bei ungültigen Eingaben wird direkt eine agentenfreundliche Antwort erzeugt.\nTypische Fehlercodes:\n- KDNR_MISSING\n- AUFTRAGSID_INVALID\n- COMMENT_MISSING"
+      "notes": "Baut eine saubere Fehlerantwort für ungültige Eingaben auf."
     },
     {
       "parameters": {
@@ -118,7 +118,7 @@
       "alwaysOutputData": true,
       "retryOnFail": false,
       "maxTries": 2,
-      "notes": "Node ruft den Sign-Service auf. \n\nDa Fehler nicht global über n8n Error Handling gelöst werden sollen: Continue On Fail = true.\nSomit läuft der Workflow auch bei Sign-Fehlern noch in eine saubere Agent-Antwort.\n\nErwartete Antwort:\n{\n  \"ok\": true,\n  \"headers\": {\n    \"X-API-Key\": \"...\",\n    \"X-Timestamp\": \"...\",\n    \"X-Nonce\": \"...\",\n    \"X-Signature\": \"...\",\n    \"Content-Type\": \"application/json\"\n  }\n}"
+      "notes": "Holt beim Sign-Service die Signatur für den PATCH-Request ab."
     },
     {
       "parameters": {
@@ -134,7 +134,7 @@
       ],
       "id": "a9e10599-f082-4ab2-8cf0-dfacc8aeddd5",
       "name": "Merge Input + Sign",
-      "notes": "Benötigt wird folgende gemeinsame Datenstruktur:\n- die ursprünglichen Eingabedaten\n- signPath\n- patchBodyString\n- die Antwort des Sign-Service"
+      "notes": "Führt Eingabedaten und Signaturdaten für den PATCH-Aufruf zusammen."
     },
     {
       "parameters": {
@@ -169,7 +169,7 @@
       ],
       "id": "c50c8af2-9615-471f-93dc-1fd02ea57a7b",
       "name": "Sign OK?",
-      "notes": "Prüfen, ob der Sign-Service erfolgreich war."
+      "notes": "Prüft, ob der Sign-Service erfolgreich war.\nBuild Sign Error Response\nBaut eine saubere Fehlerantwort, falls die Signierung fehlschlägt."
     },
     {
       "parameters": {
@@ -238,7 +238,7 @@
       "alwaysOutputData": true,
       "retryOnFail": false,
       "maxTries": 2,
-      "notes": "Der Node sendet den exakt signierten Body an die Access-API.\nTechnisch kritischer Teil, weil der PATCH-Body exakt dem signierten bodyString entsprechen muss."
+      "notes": "Sendet den signierten PATCH-Request an die Access-API, um die Auftragsnotiz zu speichern."
     },
     {
       "parameters": {
@@ -252,7 +252,7 @@
       ],
       "id": "f7f7ddb9-1d65-4b72-adf8-28dbd3058d6f",
       "name": "Build Agent Response",
-      "notes": "Auswertung der PATCH-Antwort und Aufbau der finalen, agentenfreundlichen Webhook-Antwort."
+      "notes": "Baut aus dem PATCH-Ergebnis die finale agentenfreundliche Erfolgs- oder Fehlerantwort."
     },
     {
       "parameters": {
@@ -270,7 +270,7 @@
       ],
       "id": "473b5001-23df-4e61-8e37-f8c3db42230b",
       "name": "Respond to Webhook",
-      "notes": "Gibt die finale JSON-Antwort an den aufrufenden Agenten zurück.\nResponse-Code 200, da viele Agent-/Voice-Systeme mit einer stabilen JSON-Struktur plus success: false oft besser umgehen als mit wechselnden HTTP-Statuscodes."
+      "notes": "Gibt die finale JSON-Antwort an den aufrufenden Webhook zurück."
     },
     {
       "parameters": {
@@ -286,7 +286,7 @@
       ],
       "id": "eb0b3815-df7d-4e75-a0f4-2640c271abb8",
       "name": "Merge Input + PATCH Result",
-      "notes": "Der Node ist nötig, damit Build Agent Response sowohl die PATCH-Antwort als auch die ursprünglichen Request-Daten kennt."
+      "notes": "Führt ursprüngliche Request-Daten und normalisiertes PATCH-Ergebnis zusammen."
     },
     {
       "parameters": {
@@ -304,7 +304,7 @@
       "id": "ef229ef5-8047-4e3d-a2c6-4ebf4e278d14",
       "name": "Webhook – Add Order Node",
       "webhookId": "25f2ce9d-897f-473d-aa79-585628209898",
-      "notes": "Einstiegspunkt für den Voice-Agent"
+      "notes": "Empfängt die Anfrage zum Speichern einer Auftragsnotiz."
     },
     {
       "parameters": {
@@ -317,7 +317,8 @@
         -288
       ],
       "id": "593d6323-c030-482f-8d44-db5f3afb29b0",
-      "name": "Normalize PATCH Result"
+      "name": "Normalize PATCH Result",
+      "notes": "Vereinheitlicht Erfolgs- und Fehlerantworten des PATCH-Requests für die weitere Verarbeitung."
     }
   ],
   "pinData": {},
@@ -485,7 +486,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "89a7cff9-ba0f-422a-aa46-9f70100b1e64",
+  "versionId": "05b43ccd-5857-4b16-a8a0-19b4ef8b1dde",
   "meta": {
     "instanceId": "0ec6dfdcab7eb78bd76c6abaa334f7b038d8c288297aa2bbcf7e11dc5886933c"
   },

@@ -18,7 +18,7 @@
       "name": "Webhook",
       "webhookId": "0126f500-99ca-4e4d-8a00-7e891e4cdfdb",
       "notesInFlow": false,
-      "notes": "Webhook empfängt Anfrage"
+      "notes": "Empfängt die Anfrage des Agenten zum Abrufen von Kundenaufträgen."
     },
     {
       "parameters": {
@@ -33,7 +33,7 @@
       "id": "1065ab9e-724a-436e-aba2-d0e91731c083",
       "name": "Prepare Input",
       "notesInFlow": false,
-      "notes": "Kundennummer (kdNr) aus dem Request lesen"
+      "notes": "Liest kdNr, validiert die Eingabe und baut die technischen Felder für den GET-Request."
     },
     {
       "parameters": {
@@ -80,7 +80,7 @@
       "id": "fee1de33-16da-408e-8dcf-4818dca142b8",
       "name": "Sign Request",
       "notesInFlow": false,
-      "notes": "Holt die Signatur beim Windows-Service."
+      "notes": "Holt beim Sign-Service die Signatur für den API-Request ab."
     },
     {
       "parameters": {
@@ -97,7 +97,7 @@
       "id": "35095910-fa1d-4a8b-a0fb-8baad324c4cb",
       "name": "Combine Input + Sign",
       "notesInFlow": false,
-      "notes": "Input 1: vom Code Node „Prepare Input“<br>\nInput 2: vom HTTP Request „Sign Request“"
+      "notes": "Führt Eingabedaten und Signaturdaten für den eigentlichen API-Aufruf zusammen."
     },
     {
       "parameters": {
@@ -137,7 +137,7 @@
       ],
       "id": "f97d15e0-17bb-416f-baa5-c8a725b2f7b6",
       "name": "Get Orders",
-      "notes": "Echten GET-Request aufbauen."
+      "notes": "Sendet den signierten GET-Request an die Access-API und lädt die Auftragsdaten."
     },
     {
       "parameters": {
@@ -152,7 +152,8 @@
         112
       ],
       "id": "21d15bb8-a772-478a-96b5-c6047c00f018",
-      "name": "Respond to Webhook"
+      "name": "Respond to Webhook",
+      "notes": "Gibt die finale JSON-Antwort an den aufrufenden Webhook zurück."
     },
     {
       "parameters": {
@@ -165,7 +166,8 @@
         -144
       ],
       "id": "e47e8be2-860a-4e10-a9c4-56ee35496ccc",
-      "name": "Build Agent Response"
+      "name": "Build Agent Response",
+      "notes": "Formatiert die API-Antwort in eine agentenfreundliche Struktur mit Aufträgen, Positionen und Sprachtext."
     },
     {
       "parameters": {
@@ -199,7 +201,8 @@
         96
       ],
       "id": "f67696aa-dcc1-412f-bf0e-6b82b2542256",
-      "name": "Input valid?"
+      "name": "Input valid?",
+      "notes": "Trennt zwischen gültiger Anfrage und direkter Fehlerantwort bei fehlender Kundennummer."
     }
   ],
   "pinData": {},
@@ -294,13 +297,13 @@
       ]
     }
   },
-  "active": true,
+  "active": false,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "19af1c60-2292-40e1-becd-2dcc871a0311",
+  "versionId": "ffa92ec1-7809-43fe-b937-a5563befca42",
   "meta": {
     "instanceId": "0ec6dfdcab7eb78bd76c6abaa334f7b038d8c288297aa2bbcf7e11dc5886933c"
   },
