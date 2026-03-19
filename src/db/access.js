@@ -112,7 +112,6 @@ async function updateOrderComment({ kdNr, auftragsID, comment, log }) {
   const kdNrEsc = escapeAccessString(kdNrText);
   const commentEsc = escapeAccessString(comment);
 
-  // Check if order exists
   const existsSql = `
 SELECT COUNT(1) > 0 AS order_found
 FROM tblAuftrag
@@ -120,18 +119,6 @@ WHERE [KdNr] = '${kdNrEsc}'
 AND [AuftragsID] = ${auftragsIdNum};
 `.trim();
 
-  try {
-    const rows = await connection.query(existsSql);
-    const orderFound = Boolean(rows?.[0].order_found);
-
-    if (!orderFound) {
-      return {
-        found: false, 
-        updated: false, 
-      };
-    }
-    
-  // Update order comment
   const updateSql = `
 UPDATE tblAuftrag
 SET [voice_agent_comment] = '${commentEsc}'
@@ -139,15 +126,28 @@ WHERE [KdNr] = '${kdNrEsc}'
   AND [AuftragsID] = ${auftragsIdNum};
 `.trim();
 
+  let currentSql = existsSql;
+
+  try {
+    const rows = await connection.query(existsSql);
+    const orderFound = Boolean(rows?.[0].order_found);
+
+    if (!orderFound) {
+      return {
+        found: false,
+        updated: false,
+      };
+    }
+
+    currentSql = updateSql;
     await connection.execute(updateSql);
 
     return {
       found: true,
       updated: true,
-    }
-
+    };
   } catch (err) {
-    logDbError(err, { sql: existsSql, action: "updateOrderComment", log });
+    logDbError(err, { sql: currentSql, action: "updateOrderComment", log });
     throw err;
   }
 }
