@@ -7,7 +7,7 @@
  * - Default provider: Microsoft.ACE.OLEDB.12.0 (matches your working server.js)
  * - Optional provider override via ACCESS_OLEDB_PROVIDER (e.g. "16.0" or "12.0")
  * - Supports either ACCESS_CONN_STR or ACCESS_DB_PATH
- * - Forces x64 cscript mode: ADODB.open(connStr, true)
+ * - Forces x64 cscript mode: ADODB.open(connStr)
  * - Better error logging (shows provider/db path and SQL)
  */
 
